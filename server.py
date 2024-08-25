@@ -1,7 +1,6 @@
 import socket
 
 HOST = socket.gethostbyname("192.168.100.9")
-
 #HOST = socket.gethostbyname("192.168.100.14") 
 
 PORT = 9090

@@ -1,6 +1,9 @@
 import socket
 
-HOST = socket.gethostbyname("192.168.100.9") 
+host = input("Host name: ")
+
+
+HOST = socket.gethostbyname(host) 
 PORT = 9090
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
