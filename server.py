@@ -1,9 +1,14 @@
 import socket
 import threading
+import logging
+
+
+
 
 HOST = socket.gethostbyname(socket.gethostname())
 print(HOST)
 PORT = 9090
+clients = []
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
@@ -12,39 +17,45 @@ def handle_client(client_dict):
     client, addr = client_dict["conn"], client_dict["addr"]
     while True:
         try:
-            mess = client.recv(1024).decode()
-
+            mess = client.recv(1024)
             if not mess:
-                print(f"Client {addr} disconnected!")
+                logging.info(f"Client {addr} disconnected!")
                 client.close()
                 clients.remove(client_dict)
                 break
-            elif mess == "quit":
-                print(f"Client {addr} disconnected!")
+            elif mess.decode() == "quit":
+                logging.info(f"Client {addr} disconnected!")
                 client.close()
                 clients.remove(client_dict)
                 break
             else:
-                print(mess.decode())
+                logging.info(mess.decode())
 
-        except:
-            print(f"Client {addr} disconnected!")
+        except Exception as e:
             client.close()
             clients.remove(client_dict)
+            logging.error(f"ERROR: {e} cause by client: {addr}")
+            logging.error(f"Client {addr} disconnected!!!")
             break
 
 
-clients = []
-server.listen(5)
-print(f"Starting server on port: {PORT}")
-while True:
-    client_sock, addr = server.accept()
-    print(f"Client: {addr} connected!")
-    client = {"id" : len(clients), 
-              "conn": client_sock,
-              "addr": addr
-              }
-    clients.append(client)
-    thread = threading.Thread(target=handle_client, args=(client, ))
-    thread.start()
+def main() -> None:
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    
+    server.listen(5)
+    logging.info("Server started listening")
+    while True:
+        client_sock, addr = server.accept()
+        logging.info(f"Client: {addr} connected!")
+        client = {"id" : len(clients), 
+                "conn": client_sock,
+                "addr": addr
+                }
+        clients.append(client)
+        thread = threading.Thread(target=handle_client, args=(client, ))
+        thread.start()
 
+
+if __name__ == "__main__":
+    main()
