@@ -12,8 +12,14 @@ client.connect((HOST, PORT))
 while True:
     try:
         mess = input("Message: ")
+
         client.send(mess.encode("utf-8"))
         print(f"Message sent to server: {mess}")
+
+        if mess == "quit":
+            client.close()
+            print("Client closed!")
+            break
 
     except:
         client.close()

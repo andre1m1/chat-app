@@ -12,7 +12,7 @@ def handle_client(client_dict):
     client, addr = client_dict["conn"], client_dict["addr"]
     while True:
         try:
-            mess = client.recv(1024)
+            mess = client.recv(1024).decode()
 
             if not mess:
                 print(f"Client {addr} disconnected!")
