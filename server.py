@@ -15,6 +15,7 @@ server.bind((HOST, PORT))
 
 def handle_client(client_dict):
     client, addr = client_dict["conn"], client_dict["addr"]
+
     while True:
         try:
             mess = client.recv(1024)
@@ -23,6 +24,7 @@ def handle_client(client_dict):
                 client.close()
                 clients.remove(client_dict)
                 break
+
             elif mess.decode() == "quit":
                 logging.info(f"Client {addr} disconnected!")
                 client.close()
