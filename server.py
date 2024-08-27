@@ -27,6 +27,7 @@ def handle_client(client_dict):
 
             elif mess.decode() == "quit":
                 logging.info(f"Client {addr} disconnected!")
+                client.sendall(mess)
                 client.close()
                 clients.remove(client_dict)
                 break
