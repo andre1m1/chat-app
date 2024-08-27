@@ -30,6 +30,7 @@ def handle_client(client_dict):
                 break
             else:
                 logging.info(mess.decode())
+                client.sendall(mess)
 
         except Exception as e:
             client.close()
