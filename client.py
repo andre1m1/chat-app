@@ -1,16 +1,12 @@
 import socket
 import threading
+import sys
 
 def handle_send():
     while True:
         try:
             mess = input("Message: ")
             client.send(mess.encode("utf-8"))
-
-            if mess.lower() == "quit":
-                client.close()
-                print("Client closed!")
-                break
 
         except Exception as e:
             client.close()
@@ -38,7 +34,13 @@ def handle_recv():
 
 if __name__ == "__main__":
 
-    host = input("Host name: ")
+    host = ''
+    if len(sys.argv) == 2:
+        host = sys.argv[1]
+
+    else:
+        host = input("Host name: ")
+
     HOST = socket.gethostbyname(host)
     PORT = 9090
 
