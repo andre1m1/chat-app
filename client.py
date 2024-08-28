@@ -5,7 +5,7 @@ import sys
 def handle_send():
     while True:
         try:
-            mess = input("Message: ")
+            mess = input("")
             client.send(mess.encode("utf-8"))
 
         except Exception as e:
@@ -28,7 +28,7 @@ def handle_recv():
                     client.send(user_name.encode("utf-8"))
                 
                 case _:
-                    print(data.decode(), flush=True)
+                    print(data.decode())
 
         except Exception as e:
             client.close()

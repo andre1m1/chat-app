@@ -5,13 +5,17 @@ import logging
 def close_conn(client: dict, with_err: Exception | None = None) -> None:
     conn, addr = client["conn"], client["addr"]
     conn.close()
-    clients.remove(client)
-    del conn
-    if with_err:
-        logging.error(f"ERROR: {with_err} cause by client: {addr}")
-        logging.error(f"Client {addr} disconnected!!!")
-    else:
-        logging.info(f"Client {addr} disconnected!")
+    try:
+        clients.remove(client)
+        del conn
+        if with_err:
+            logging.error(f"ERROR: {with_err} cause by client: {addr}")
+            logging.error(f"Client {addr} disconnected!!!")
+        else:
+            logging.info(f"Client {addr} disconnected!")
+            
+    except Exception as e:
+        logging.error(f"Could not properly close connection: {e}")
 
 
 def handle_client(client: dict) -> None:
