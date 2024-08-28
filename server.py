@@ -2,62 +2,75 @@ import socket
 import threading
 import logging
 
+def close_conn(client: dict, with_err: Exception | None = None) -> None:
+    conn, addr = client["conn"], client["addr"]
+    conn.close()
+    clients.remove(client)
+    del conn
+    if with_err:
+        logging.error(f"ERROR: {with_err} cause by client: {addr}")
+        logging.error(f"Client {addr} disconnected!!!")
+    else:
+        logging.info(f"Client {addr} disconnected!")
 
-HOST = socket.gethostbyname(socket.gethostname())
-print(HOST)
-PORT = 9090
-clients = []
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((HOST, PORT))
+def handle_client(client: dict) -> None:
+    conn = client["conn"]
+    try:
+        conn.sendall("user_name".encode("utf-8"))
+        user_name = conn.recv(1024).decode()
 
-def handle_client(client_dict):
-    client, addr = client_dict["conn"], client_dict["addr"]
+        client["user_name"] = user_name
+
+    except Exception as e:
+        close_conn(client, with_err=e)
 
     while True:
         try:
-            mess = client.recv(1024)
+            mess = conn.recv(1024)
             if mess is None:
-                logging.info(f"Client {addr} disconnected!")
-                client.close()
-                clients.remove(client_dict)
+                close_conn(client)
                 break
 
             elif mess.decode() == "quit":
-                logging.info(f"Client {addr} disconnected!")
-                client.sendall(mess)
-                client.close()
-                clients.remove(client_dict)
+                conn.sendall(mess)
+                close_conn(client)
                 break
             else:
                 logging.info(mess.decode())
-                client.sendall(mess)
+                for client in clients:
+                    client['conn'].sendall(mess)
 
         except Exception as e:
-            client.close()
-            clients.remove(client_dict)
-            logging.error(f"ERROR: {e} cause by client: {addr}")
-            logging.error(f"Client {addr} disconnected!!!")
+            close_conn(client, with_err=e)
             break
 
 
-def main() -> None:
+
+
+if __name__ == "__main__":
+    HOST = socket.gethostbyname(socket.gethostname())
+    print(HOST)
+    PORT = 9090
+    clients: list[dict] = []
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
     format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
-    
+
     server.listen(5)
     logging.info("Server started listening")
     while True:
         client_sock, addr = server.accept()
         logging.info(f"Client: {addr} connected!")
-        client = {"id" : len(clients), 
-                "conn": client_sock,
-                "addr": addr
-                }
+        client: dict = {
+            "id" : len(clients), 
+            "conn": client_sock,
+            "addr": addr,
+            "user_name": None
+            }
         clients.append(client)
         thread = threading.Thread(target=handle_client, args=(client, ))
         thread.start()
 
-
-if __name__ == "__main__":
-    main()

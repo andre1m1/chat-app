@@ -19,11 +19,16 @@ def handle_recv():
     while True:
         try:
             data = client.recv(1024)
-            if data.decode().lower() == "quit":
-                client.close()
-                break
+            match data.decode():
+                case "quit":
+                    client.close()
+                    break
 
-            print(data.decode())
+                case "user_name":
+                    client.send(user_name.encode("utf-8"))
+                
+                case _:
+                    print(data.decode(), flush=True)
 
         except Exception as e:
             client.close()
@@ -35,11 +40,14 @@ def handle_recv():
 if __name__ == "__main__":
 
     host = ''
+    user_name = ''
     if len(sys.argv) == 2:
         host = sys.argv[1]
 
     else:
         host = input("Host name: ")
+
+    user_name = input("Username: ")
 
     HOST = socket.gethostbyname(host)
     PORT = 9090
