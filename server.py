@@ -31,19 +31,20 @@ def handle_client(client: dict) -> None:
 
     while True:
         try:
-            mess = conn.recv(1024)
+            mess = conn.recv(1024).decode()
             if mess is None:
                 close_conn(client)
                 break
 
-            elif mess.decode() == "quit":
+            elif mess == "quit":
                 conn.sendall(mess)
                 close_conn(client)
                 break
             else:
-                logging.info(mess.decode())
-                for client in clients:
-                    client['conn'].sendall(mess)
+                logging.info(mess)
+                mess = f"{client['user_name']} : {mess}"
+                for c in clients:
+                    c["conn"].sendall(mess.encode())
 
         except Exception as e:
             close_conn(client, with_err=e)
@@ -75,6 +76,6 @@ if __name__ == "__main__":
             "user_name": None
             }
         clients.append(client)
-        thread = threading.Thread(target=handle_client, args=(client, ))
-        thread.start()
+        client_thread = threading.Thread(target=handle_client, args=(client, ))
+        client_thread.start()
 
