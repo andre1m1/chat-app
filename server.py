@@ -37,7 +37,7 @@ def handle_client(client: dict) -> None:
                 break
 
             elif mess == "quit":
-                conn.sendall(mess)
+                conn.sendall(mess.encode())
                 close_conn(client)
                 break
             else:
