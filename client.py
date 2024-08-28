@@ -1,21 +1,16 @@
 import socket
 import threading
 
-host = input("Host name: ")
-
-
-HOST = socket.gethostbyname(host)
-PORT = 9090
-
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-client.connect((HOST, PORT))
 def handle_send():
     while True:
         try:
             mess = input("Message: ")
             client.send(mess.encode("utf-8"))
-    
+
+            if mess.lower() == "quit":
+                client.close()
+                print("Client closed!")
+                break
 
         except Exception as e:
             client.close()
@@ -41,10 +36,20 @@ def handle_recv():
             break
 
 
-send_thread = threading.Thread(target=handle_send, args=())
-send_thread.start()
+if __name__ == "__main__":
 
-recv_thread = threading.Thread(target=handle_recv, args=())
-recv_thread.start()
+    host = input("Host name: ")
+    HOST = socket.gethostbyname(host)
+    PORT = 9090
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    client.connect((HOST, PORT))
+
+    send_thread = threading.Thread(target=handle_send, args=())
+    send_thread.start()
+
+    recv_thread = threading.Thread(target=handle_recv, args=())
+    recv_thread.start()
 
 

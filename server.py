@@ -3,8 +3,6 @@ import threading
 import logging
 
 
-
-
 HOST = socket.gethostbyname(socket.gethostname())
 print(HOST)
 PORT = 9090
@@ -19,7 +17,7 @@ def handle_client(client_dict):
     while True:
         try:
             mess = client.recv(1024)
-            if not mess:
+            if mess is None:
                 logging.info(f"Client {addr} disconnected!")
                 client.close()
                 clients.remove(client_dict)
