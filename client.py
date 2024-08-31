@@ -1,19 +1,45 @@
 import socket
 import threading
+import pickle
 import os
 import sys
 
-def handle_send():
+
+def parse_command(message: str) -> dict:
+    if message[0] == '/':
+        words = message.split(' ')
+        command : str = words[0]
+        command_body : str = " ".join(words[1:])
+
+        match command:
+            case "/quit":
+                return {"type": "/quit"}
+            
+            case _:
+                return {"type" : "unreachable"}
+
+
+def handle_send() -> None:
     while True:
         try:
             mess : str = input("")
-            client.send(mess.encode("utf-8"))
 
-            if mess.lower() == "quit":
-                break
+            if mess[0] == '/':
+                command = parse_command(mess)
+                if command["type"] == "unreachable":
+                    print("Unknown/unsupported command! Please try again.")
+                    continue
 
-            # print(f"{user_name} : {mess}")
+                if command["type"] == "/quit":
+                    client.sendall(pickle.dumps(command))
+                    break
+                
+                command = pickle.dumps(command)
+                client.sendall(command)
 
+            else:
+                client.sendall(pickle.dumps({"type": "/message", "text": mess}))
+            
         except Exception as e:
             client.close()
             print("Client closed!")
@@ -21,24 +47,30 @@ def handle_send():
             break
 
 
-def handle_recv():
+def handle_recv() -> None:
     while True:
         try:
-            data : bytes = client.recv(1024)
-            match data.decode():
+            data : bytes = pickle.loads(client.recv(1024))
+
+            match data["type"]:
                 case None:
                     client.close()
                     break
-                
-                case "quit":
+
+                case "/quit":
                     client.close()
                     break
 
-                case "user_name":
-                    client.send(user_name.encode("utf-8"))
+                case "/message":
+                    print(f"{data["user"]} : {data["text"]}")
+
+                case "/user_name":
+                    client.sendall(pickle.dumps({"type": "/user_name", "text": user_name}))
                 
                 case _:
-                    print(data.decode())
+                    client.close()
+                    print(f"ERROR: Unknow message type: {data["type"]} received from server")
+                    break
 
         except Exception as e:
             client.close()
