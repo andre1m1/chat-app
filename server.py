@@ -1,7 +1,7 @@
 import socket
 import threading
-import logging
 import pickle
+import logging
 
 type Clients = list[dict]
 type Err = Exception | None
@@ -26,8 +26,15 @@ def close_conn(client: dict, with_err: Err = None) -> None:
 def handle_client(client: dict) -> None:
     conn = client["conn"]
     try:
-        conn.sendall("user_name".encode("utf-8"))
-        user_name = conn.recv(1024).decode()
+        conn.sendall(pickle.dumps({"type": "/user_name"}))
+
+        client_mess = pickle.loads(conn.recv(1024))
+        if client_mess["type"] != "/user_name":
+            raise RuntimeError("Could not receive proper '/user_name' message from client")
+        
+        user_name = client_mess["text"]
+        if user_name is None:
+            raise RuntimeError("Could not receive proper '/user_name' message from client")
 
         client["user_name"] = user_name
 
@@ -44,7 +51,7 @@ def handle_client(client: dict) -> None:
                     break
 
                 case "/quit":
-                    conn.sendall("/quit".encode("utf-8"))
+                    conn.sendall(pickle.dumps(client_mess))
                     close_conn(client)
                     break
 
