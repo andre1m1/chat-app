@@ -1,6 +1,7 @@
 import socket
 import threading
 import logging
+import pickle
 
 type Clients = list[dict]
 type Err = Exception | None
@@ -21,6 +22,7 @@ def close_conn(client: dict, with_err: Err = None) -> None:
         logging.error(f"Could not properly close connection: {e}")
 
 
+
 def handle_client(client: dict) -> None:
     conn = client["conn"]
     try:
@@ -34,20 +36,35 @@ def handle_client(client: dict) -> None:
 
     while True:
         try:
-            mess = conn.recv(1024).decode()
-            if mess is None:
-                close_conn(client)
-                break
+            client_mess = pickle.loads(conn.recv(1024))
 
-            elif mess == "quit":
-                conn.sendall(mess.encode())
-                close_conn(client)
-                break
-            else:
-                logging.info(mess)
-                mess = f"{client['user_name']} : {mess}"
-                for c in clients:
-                    c["conn"].sendall(mess.encode())
+            match client_mess["type"]:
+                case None:
+                    close_conn(client)
+                    break
+
+                case "/quit":
+                    conn.sendall("/quit".encode("utf-8"))
+                    close_conn(client)
+                    break
+
+                case "/message":
+                    logging.info(client_mess)
+                    message = {
+                        "type": "/message",
+                        "user": client["user_name"],
+                        "text": client_mess["text"]
+                    }
+
+                    for c in clients:
+                        c["conn"].sendall(pickle.dumps(message))
+                
+                case _:
+                    close_conn(client)
+                    print(f"ERROR: Unknow message type: {client_mess["type"]} received from client: {client}")
+                    break
+
+
 
         except Exception as e:
             close_conn(client, with_err=e)
