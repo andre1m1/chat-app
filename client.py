@@ -5,18 +5,17 @@ import os
 import sys
 
 
-def parse_command(message: str) -> dict:
-    if message[0] == '/':
-        words = message.split(' ')
-        command : str = words[0]
-        command_body : str = " ".join(words[1:])
+def parse_command(message: str) -> dict[str, str]:
+    words = message.split(' ')
+    command : str = words[0]
+    command_body : str = " ".join(words[1:])
 
-        match command:
-            case "/quit":
-                return {"type": "/quit"}
-            
-            case _:
-                return {"type" : "unreachable"}
+    match command:
+        case "/quit":
+            return {"type": "/quit"}
+        
+        case _:
+            return {"type" : "unreachable"}
 
 
 def handle_send() -> None:
@@ -34,8 +33,8 @@ def handle_send() -> None:
                     client.sendall(pickle.dumps(command))
                     break
                 
-                command = pickle.dumps(command)
-                client.sendall(command)
+                command_mess = pickle.dumps(command)
+                client.sendall(command_mess)
 
             else:
                 client.sendall(pickle.dumps({"type": "/message", "text": mess}))
@@ -50,7 +49,7 @@ def handle_send() -> None:
 def handle_recv() -> None:
     while True:
         try:
-            data : bytes = pickle.loads(client.recv(1024))
+            data : dict[str, str] = pickle.loads(client.recv(1024))
 
             match data["type"]:
                 case None:
