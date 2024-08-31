@@ -2,7 +2,10 @@ import socket
 import threading
 import logging
 
-def close_conn(client: dict, with_err: Exception | None = None) -> None:
+type Clients = list[dict]
+type Err = Exception | None
+
+def close_conn(client: dict, with_err: Err = None) -> None:
     conn, addr = client["conn"], client["addr"]
     conn.close()
     try:
@@ -56,8 +59,9 @@ def handle_client(client: dict) -> None:
 if __name__ == "__main__":
     HOST = socket.gethostbyname(socket.gethostname())
     print(HOST)
-    PORT = 9090
-    clients: list[dict] = []
+    PORT : int = 9090
+
+    clients: Clients = []
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))

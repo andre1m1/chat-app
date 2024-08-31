@@ -6,7 +6,7 @@ import sys
 def handle_send():
     while True:
         try:
-            mess = input("")
+            mess : str = input("")
             client.send(mess.encode("utf-8"))
 
             if mess.lower() == "quit":
@@ -24,7 +24,7 @@ def handle_send():
 def handle_recv():
     while True:
         try:
-            data = client.recv(1024)
+            data : bytes = client.recv(1024)
             match data.decode():
                 case None:
                     client.close()
@@ -49,8 +49,8 @@ def handle_recv():
 
 if __name__ == "__main__":
 
-    host = ''
-    user_name = ''
+    host : str = ''
+    user_name : str = ''
     if len(sys.argv) == 2:
         host = sys.argv[1]
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         os.system("clear")
     
     HOST = socket.gethostbyname(host)
-    PORT = 9090
+    PORT : int = 9090
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
