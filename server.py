@@ -3,10 +3,11 @@ import threading
 import pickle
 import logging
 
-type Clients = list[dict]
 type Err = Exception | None
+type Client = dict[str, str]
+type Clients = list[Client]
 
-def close_conn(client: dict, with_err: Err = None) -> None:
+def close_conn(client: Client, with_err: Err = None) -> None:
     conn, addr = client["conn"], client["addr"]
     conn.close()
     try:
@@ -23,7 +24,7 @@ def close_conn(client: dict, with_err: Err = None) -> None:
 
 
 
-def handle_client(client: dict) -> None:
+def handle_client(client: Client) -> None:
     conn = client["conn"]
     try:
         conn.sendall(pickle.dumps({"type": "/user_name"}))
@@ -97,8 +98,8 @@ if __name__ == "__main__":
     while True:
         client_sock, addr = server.accept()
         logging.info(f"Client: {addr} connected!")
-        client: dict = {
-            "id" : len(clients), 
+        client: Client = {
+            "id" : str(len(clients)), 
             "conn": client_sock,
             "addr": addr,
             "user_name": None
