@@ -56,6 +56,13 @@ def handle_client(client: Client) -> None:
                     close_conn(client)
                     break
 
+                case "/vote":
+                    vote_type = client_mess["body"].split(' ')[0]
+                    if vote_type == "kick":
+                        pass
+                    else:
+                        conn.sendall(pickle.dumps({"type": "unreachable"}))
+
                 case "/message":
                     logging.info(client_mess)
                     message = {
@@ -64,9 +71,10 @@ def handle_client(client: Client) -> None:
                         "text": client_mess["text"]
                     }
 
-                    for c in clients:
+                    for c in clients: 
                         c["conn"].sendall(pickle.dumps(message))
                 
+                    continue
                 case _:
                     close_conn(client)
                     print(f"ERROR: Unknow message type: {client_mess["type"]} received from client: {client}")
