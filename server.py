@@ -4,11 +4,12 @@ import pickle
 import logging
 
 type Err = Exception | None
-type Client = dict[str, str]
+type Client = dict[str, socket.socket | str | int]
 type Clients = list[Client]
 
 def close_conn(client: Client, with_err: Err = None) -> None:
-    conn, addr = client["conn"], client["addr"]
+    conn: socket.socket = client["conn"]
+    addr = client["addr"]
     conn.close()
     try:
         clients.remove(client)
@@ -25,7 +26,7 @@ def close_conn(client: Client, with_err: Err = None) -> None:
 
 
 def handle_client(client: Client) -> None:
-    conn = client["conn"]
+    conn: socket.socket = client["conn"]
     try:
         conn.sendall(pickle.dumps({"type": "/user_name"}))
 
@@ -33,7 +34,7 @@ def handle_client(client: Client) -> None:
         if client_mess["type"] != "/user_name":
             raise RuntimeError("Could not receive proper '/user_name' message from client")
         
-        user_name = client_mess["text"]
+        user_name : str | None = client_mess["text"]
         if user_name is None:
             raise RuntimeError("Could not receive proper '/user_name' message from client")
 
@@ -57,15 +58,34 @@ def handle_client(client: Client) -> None:
                     break
 
                 case "/vote":
-                    vote_type = client_mess["body"].split(' ')[0]
+                    vote_body : list[str] = client_mess["body"].split(' ')
+                    vote_type : str = vote_body.pop(0)
+        
+                    logging.info(vote_type)
                     if vote_type == "kick":
-                        pass
+                        if len(vote_body) > 1:
+                            conn.sendall(pickle.dumps({"type": "/unreachable"}))
+                        
+                        user_name = vote_body.pop()
+                        user : Client | None = None
+                        for client in clients:
+                            if client["user_name"] == user_name:
+                                user = client
+                                break
+                        
+                        if user == None:
+                            conn.sendall(pickle.dumps({"type": "/unreachable"}))
+                        
+                        user["kick"] += 1
+                        if user["kick"] >= len(clients) / 2:
+                            user["conn"].sendall(pickle.dumps({"type" : "/quit"}))
+                            close_conn(user)
                     else:
-                        conn.sendall(pickle.dumps({"type": "unreachable"}))
+                        conn.sendall(pickle.dumps({"type": "/unreachable"}))
 
                 case "/message":
                     logging.info(client_mess)
-                    message = {
+                    message : dict[str, str] = {
                         "type": "/message",
                         "user": client["user_name"],
                         "text": client_mess["text"]
@@ -107,10 +127,11 @@ if __name__ == "__main__":
         client_sock, addr = server.accept()
         logging.info(f"Client: {addr} connected!")
         client: Client = {
-            "id" : str(len(clients)), 
+            "id" : len(clients), 
             "conn": client_sock,
             "addr": addr,
-            "user_name": None
+            "user_name": "",
+            "kick": 0
             }
         clients.append(client)
         client_thread = threading.Thread(target=handle_client, args=(client, ))

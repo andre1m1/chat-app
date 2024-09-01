@@ -13,11 +13,10 @@ def parse_command(message: str) -> dict[str, str]:
     match command:
         case "/quit":
             return {"type": "/quit"}
-        
-        case "/vote ":
+        case "/vote":
             return {"type": "/vote", "body": command_body}
         case _:
-            return {"type" : "unreachable"}
+            return {"type" : "/unreachable"}
 
 
 def handle_send() -> None:
@@ -27,7 +26,7 @@ def handle_send() -> None:
 
             if mess[0] == '/':
                 command = parse_command(mess)
-                if command["type"] == "unreachable":
+                if command["type"] == "/unreachable":
                     print("Unknown/unsupported command! Please try again.")
                     continue
 
@@ -35,8 +34,7 @@ def handle_send() -> None:
                     client.sendall(pickle.dumps(command))
                     break
                 
-                command_mess = pickle.dumps(command)
-                client.sendall(command_mess)
+                client.sendall(pickle.dumps(command))
 
             else:
                 client.sendall(pickle.dumps({"type": "/message", "text": mess}))
