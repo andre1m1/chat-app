@@ -14,6 +14,8 @@ def parse_command(message: str) -> dict[str, str]:
         case "/quit":
             return {"type": "/quit"}
         
+        case "/vote ":
+            return {"type": "/vote", "body": command_body}
         case _:
             return {"type" : "unreachable"}
 
@@ -62,9 +64,13 @@ def handle_recv() -> None:
 
                 case "/message":
                     print(f"{data["user"]} : {data["text"]}")
+                    continue
 
                 case "/user_name":
                     client.sendall(pickle.dumps({"type": "/user_name", "text": user_name}))
+
+                case "/unreachable":
+                    print("Unknown Command type or arguments!")
                 
                 case _:
                     client.close()
